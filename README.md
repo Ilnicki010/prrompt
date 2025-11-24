@@ -30,6 +30,7 @@ What is saw is people deffering merging prompt changes into the main branch unti
 - `prrompt.branchPrefix`: The prefix to use for the branch name (default: `prompt-update`)
 - `prrompt.baseBranch`: The base branch to create the prompt branch from (default: `main`)
 - `prrompt.promptPatterns`: The patterns to use for the prompt files (default: `prompts/,.claude/skills/`)
+- `prrompt.verbosity`: The verbosity level (default: `low`)
 
 ## Usage
 

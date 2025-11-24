@@ -14,6 +14,12 @@ const (
 	defaultCommitPrefix = "prompt"
 	defaultBranchPrefix = "prompt-update"
 	defaultBaseBranch   = "main"
+	defaultVerbosity    = "low"
+)
+
+const (
+	verbosityLow    = "low"
+	verbosityHigh   = "high"
 )
 
 var defaultPromptPatterns = []string{
@@ -72,6 +78,18 @@ func getPromptPatterns() []string {
 		return defaultPromptPatterns
 	}
 	return result
+}
+
+func getVerbosity() string {
+	value, err := runGit("config", "--get", "prrompt.verbosity")
+	if err != nil {
+		return defaultVerbosity
+	}
+	value = strings.ToLower(strings.TrimSpace(value))
+	if value == verbosityHigh {
+		return verbosityHigh
+	}
+	return defaultVerbosity
 }
 
 type CommitInfo struct {
@@ -177,22 +195,28 @@ func analyzeCommit(sha string) (*CommitInfo, error) {
 func extractPrompts(info *CommitInfo) error {
 	shortSHA := info.SHA[:7]
 	promptBranch := fmt.Sprintf("%s/%s", getBranchPrefix(), shortSHA)
+	verbosity := getVerbosity()
+	isHighVerbosity := verbosity == verbosityHigh
 
-	fmt.Println("\n" + strings.Repeat("=", 60))
-	fmt.Printf("Processing commit: %s\n", shortSHA)
-	fmt.Printf("Message: %s\n", truncate(info.Message, 60))
-	fmt.Printf("Prompt files: %d\n", len(info.PromptFiles))
-	fmt.Printf("Other files: %d\n", len(info.OtherFiles))
-	fmt.Println(strings.Repeat("=", 60))
+	if isHighVerbosity {
+		fmt.Println("\n" + strings.Repeat("=", 60))
+		fmt.Printf("Processing commit: %s\n", shortSHA)
+		fmt.Printf("Message: %s\n", truncate(info.Message, 60))
+		fmt.Printf("Prompt files: %d\n", len(info.PromptFiles))
+		fmt.Printf("Other files: %d\n", len(info.OtherFiles))
+		fmt.Println(strings.Repeat("=", 60))
+		fmt.Printf("\nCreating branch: %s\n", promptBranch)
+	}
 
 	// Create and checkout new branch from base
-	fmt.Printf("\nCreating branch: %s\n", promptBranch)
 	if _, err := runGit("checkout", "-b", promptBranch, getBaseBranch()); err != nil {
 		return fmt.Errorf("failed to create branch: %w", err)
 	}
 
 	// Cherry-pick without committing
-	fmt.Printf("Cherry-picking commit %s...\n", shortSHA)
+	if isHighVerbosity {
+		fmt.Printf("Cherry-picking commit %s...\n", shortSHA)
+	}
 	if _, err := runGit("cherry-pick", info.SHA, "--no-commit"); err != nil {
 		cleanup(info.SourceBranch, promptBranch)
 		return fmt.Errorf("failed to cherry-pick: %w", err)
@@ -217,12 +241,16 @@ func extractPrompts(info *CommitInfo) error {
 		return fmt.Errorf("failed to commit: %w", err)
 	}
 
-	fmt.Printf("✓ Created skill branch: %s\n", promptBranch)
+	if isHighVerbosity {
+		fmt.Printf("✓ Created skill branch: %s\n", promptBranch)
+	}
 
 	// Push to remote
 	if _, err := runGit("push", "origin", promptBranch, "-u"); err != nil {
-		fmt.Printf("Warning: failed to push (you may need to push manually): %v\n", err)
-	} else {
+		if isHighVerbosity {
+			fmt.Printf("Warning: failed to push (you may need to push manually): %v\n", err)
+		}
+	} else if isHighVerbosity {
 		fmt.Printf("✓ Pushed to origin/%s\n", promptBranch)
 	}
 
@@ -233,8 +261,16 @@ func extractPrompts(info *CommitInfo) error {
 
 	// Generate PR URL
 	prURL := generatePRURL(promptBranch)
-	fmt.Printf("\n✓ Skill extraction complete!\n")
-	fmt.Printf("\nCreate PR: %s\n\n", prURL)
+	
+	if isHighVerbosity {
+		fmt.Printf("\n✓ Skill extraction complete!\n")
+		fmt.Printf("\nCreate PR: %s\n\n", prURL)
+	} else {
+		// Low verbosity: just show the essential info
+		fmt.Printf("Updated prompt files detected: %d\n", len(info.PromptFiles))
+		fmt.Printf("Branch: %s\n", promptBranch)
+		fmt.Printf("PR: %s\n", prURL)
+	}
 
 	return nil
 }
