@@ -12,7 +12,7 @@ const toolName = "prrompt"
 
 const (
 	defaultCommitPrefix = "prompt"
-	defaultBranchPrefix = "skill-update"
+	defaultBranchPrefix = "prompt-update"
 	defaultBaseBranch   = "main"
 )
 
