@@ -18,9 +18,30 @@ What is saw is people deffering merging prompt changes into the main branch unti
 
 ## Installation
 
-1. Download the release for your platform from the [releases page](https://github.com/niraj-mishra/prrompt/releases)
-2. Move the binary to a directory in your `PATH`
-3. Run `prrompt install` in your project directory to install the hook
+### Using GoReleaser Releases
+
+1. Download the release archive for your platform from the [releases page](https://github.com/Ilnicki010/prrompt/releases):
+   - **macOS**: `prrompt_Darwin_x86_64.tar.gz` (Intel) or `prrompt_Darwin_arm64.tar.gz` (Apple Silicon)
+   - **Linux**: `prrompt_Linux_x86_64.tar.gz`, `prrompt_Linux_i386.tar.gz`, or `prrompt_Linux_arm64.tar.gz`
+   - **Windows**: `prrompt_Windows_x86_64.zip`, `prrompt_Windows_i386.zip`, or `prrompt_Windows_arm64.zip`
+
+2. Extract the archive and move the binary to a directory in your `PATH`:
+   ```bash
+   # macOS/Linux example
+   tar -xzf prrompt_Darwin_x86_64.tar.gz
+   sudo mv prrompt /usr/local/bin/
+   
+   # Or to a local bin directory
+   mkdir -p ~/.local/bin
+   mv prrompt ~/.local/bin/
+   export PATH="$HOME/.local/bin:$PATH"  # Add to ~/.zshrc or ~/.bashrc
+   ```
+
+3. Run `prrompt install` in your project directory to install the git hook:
+   ```bash
+   cd your-project
+   prrompt install
+   ```
 
 ## Configuration
 
