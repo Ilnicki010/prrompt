@@ -11,17 +11,67 @@ import (
 const toolName = "prrompt"
 
 const (
-	commitPrefix = "prompt"
+	defaultCommitPrefix = "prompt"
+	defaultBranchPrefix = "skill-update"
+	defaultBaseBranch   = "main"
 )
 
-const (
-	branchPrefix = "skill-update"
-	baseBranch   = "main"
-)
-
-var promptPatterns = []string{
+var defaultPromptPatterns = []string{
 	".claude/skills/",
 	"prompts/",
+}
+
+func getCommitPrefix() string {
+	value, err := runGit("config", "--get", "prrompt.commitPrefix")
+	if err != nil {
+		return defaultCommitPrefix
+	}
+	if value == "" {
+		return defaultCommitPrefix
+	}
+	return value
+}
+
+func getBranchPrefix() string {
+	value, err := runGit("config", "--get", "prrompt.branchPrefix")
+	if err != nil {
+		return defaultBranchPrefix
+	}
+	if value == "" {
+		return defaultBranchPrefix
+	}
+	return value
+}
+
+func getBaseBranch() string {
+	value, err := runGit("config", "--get", "prrompt.baseBranch")
+	if err != nil {
+		return defaultBaseBranch
+	}
+	if value == "" {
+		return defaultBaseBranch
+	}
+	return value
+}
+
+func getPromptPatterns() []string {
+	value, err := runGit("config", "--get", "prrompt.promptPatterns")
+	if err != nil || value == "" {
+		return defaultPromptPatterns
+	}
+	// Split by comma and trim whitespace
+	patterns := strings.Split(value, ",")
+	result := make([]string, 0, len(patterns))
+	for _, pattern := range patterns {
+		pattern = strings.TrimSpace(pattern)
+		if pattern != "" {
+			result = append(result, pattern)
+		}
+	}
+	if len(result) == 0 {
+		return defaultPromptPatterns
+	}
+	return result
 }
 
 type CommitInfo struct {
@@ -44,7 +94,7 @@ func main() {
 	
 	// Check if we're on a prompt branch - if so, skip to avoid recursion
 	currentBranch, err := runGit("rev-parse", "--abbrev-ref", "HEAD")
-	if err == nil && strings.HasPrefix(currentBranch, branchPrefix+"/") {
+	if err == nil && strings.HasPrefix(currentBranch, getBranchPrefix()+"/") {
 		// We're on a prompt branch, don't process
 		return
 	}
@@ -72,7 +122,7 @@ func runGit(args ...string) (string, error) {
 }
 
 func isPromptFile(path string) bool {
-	for _, pattern := range promptPatterns {
+	for _, pattern := range getPromptPatterns() {
 		if strings.HasPrefix(path, pattern) {
 			return true
 		}
@@ -119,7 +169,7 @@ func analyzeCommit(sha string) (*CommitInfo, error) {
 
 func extractPrompts(info *CommitInfo) error {
 	shortSHA := info.SHA[:7]
-	promptBranch := fmt.Sprintf("%s/%s", branchPrefix, shortSHA)
+	promptBranch := fmt.Sprintf("%s/%s", getBranchPrefix(), shortSHA)
 
 	fmt.Println("\n" + strings.Repeat("=", 60))
 	fmt.Printf("Processing commit: %s\n", shortSHA)
@@ -130,7 +180,7 @@ func extractPrompts(info *CommitInfo) error {
 
 	// Create and checkout new branch from base
 	fmt.Printf("\nCreating branch: %s\n", promptBranch)
-	if _, err := runGit("checkout", "-b", promptBranch, baseBranch); err != nil {
+	if _, err := runGit("checkout", "-b", promptBranch, getBaseBranch()); err != nil {
 		return fmt.Errorf("failed to create branch: %w", err)
 	}
 
@@ -150,7 +200,7 @@ func extractPrompts(info *CommitInfo) error {
 	}
 
 	// Create commit message
-	commitMsg := fmt.Sprintf("[%s] %s", commitPrefix,info.Message)
+	commitMsg := fmt.Sprintf("[%s] %s", getCommitPrefix(), info.Message)
 	if info.IsMixed {
 		commitMsg += fmt.Sprintf("\n\nExtracted from %s (%s)", info.SourceBranch, shortSHA)
 	}
@@ -214,7 +264,7 @@ func generatePRURL(branch string) string {
 		return fmt.Sprintf("Create PR manually for branch: %s", branch)
 	}
 
-	return fmt.Sprintf("https://github.com/%s/compare/%s...%s?expand=1", repoPath, baseBranch, branch)
+	return fmt.Sprintf("https://github.com/%s/compare/%s...%s?expand=1", repoPath, getBaseBranch(), branch)
 }
 
 func truncate(s string, maxLen int) string {
