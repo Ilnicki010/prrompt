@@ -198,11 +198,10 @@ func extractPrompts(info *CommitInfo) error {
 		return fmt.Errorf("failed to cherry-pick: %w", err)
 	}
 
-	// For mixed commits, remove non-prompt files
+	// For mixed commits, unstage non-prompt files (but keep them in working directory)
 	if info.IsMixed {
 		for _, file := range info.OtherFiles {
-			// Remove from index and working directory
-			runGit("rm", "-f", file)
+			runGit("restore", "--staged", file)
 		}
 	}
 

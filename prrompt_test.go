@@ -146,20 +146,24 @@ func Test_MixedCommit(t *testing.T) {
 		t.Errorf("Expected to be back on %s, but on %s", repo.BranchName, currentBranch)
 	}
 
-	// Verify the prompt branch only has the prompt file
+	if _, err := os.Stat(otherFile); os.IsNotExist(err) {
+		t.Error("Other file should still exist in the working directory - prrompt should not remove files")
+	}
+
+	// Verify the prompt branch only has the prompt file in the commit
 	runGitInDir(repo.Dir, "checkout", expectedBranch)
 	
 	// Check what files are in the commit
 	filesInCommit, _ := runGitInDir(repo.Dir, "ls-tree", "-r", "--name-only", "HEAD")
 	
-	// Prompt file should exist
+	// Prompt file should exist in the commit
 	if !strings.Contains(filesInCommit, ".claude/skills/test.md") && !strings.Contains(filesInCommit, "prompts/test.md") {
 		t.Errorf("Prompt file should exist in the branch. Files in commit: %s", filesInCommit)
 	}
 
 	// Other file should NOT exist in the commit
 	if strings.Contains(filesInCommit, "src/main.go") {
-		t.Errorf("Other file should NOT exist in the prompt branch. Files in commit: %s", filesInCommit)
+		t.Errorf("Other file should NOT exist in the prompt branch commit. Files in commit: %s", filesInCommit)
 	}
 
 	// Verify commit message includes extraction info
