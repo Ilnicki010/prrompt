@@ -26,6 +26,11 @@ What is saw is people deffering merging prompt changes into the main branch unti
 
 **pr**rompt is configured using a `.gitconfig` file. You can configure the following settings:
 
-- `prrompt.commitPrefix`: The prefix to use for the commit message
-- `prrompt.branchPrefix`: The prefix to use for the branch name
-- `prrompt.baseBranch`: The base branch to create the prompt branch from
+- `prrompt.commitPrefix`: The prefix to use for the commit message (default: `prompt`)
+- `prrompt.branchPrefix`: The prefix to use for the branch name (default: `prompt-update`)
+- `prrompt.baseBranch`: The base branch to create the prompt branch from (default: `main`)
+- `prrompt.promptPatterns`: The patterns to use for the prompt files (default: `prompts/,.claude/skills/`)
+
+## Usage
+
+**pr**rompt is a git post-commit hook. It will automatically run when you commit your changes.
