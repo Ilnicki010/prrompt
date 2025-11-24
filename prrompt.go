@@ -83,6 +83,30 @@ type CommitInfo struct {
 	SourceBranch string
 }
 
+func processCommit(commitSHA string) error {
+	// Check if we're on a prompt branch - if so, skip to avoid recursion
+	currentBranch, err := runGit("rev-parse", "--abbrev-ref", "HEAD")
+	if err == nil && strings.HasPrefix(currentBranch, getBranchPrefix()+"/") {
+		// We're on a prompt branch, don't process
+		return nil
+	}
+	
+	commitInfo, err := analyzeCommit(commitSHA)
+	if err != nil {
+		return fmt.Errorf("error analyzing commit: %w", err)
+	}
+
+	if len(commitInfo.PromptFiles) == 0 {
+		return nil
+	}
+
+	if err := extractPrompts(commitInfo); err != nil {
+		return fmt.Errorf("error extracting prompts: %w", err)
+	}
+
+	return nil
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: %s <commit-sha>\n", toolName)
@@ -92,25 +116,8 @@ func main() {
 
 	commitSHA := os.Args[1]
 	
-	// Check if we're on a prompt branch - if so, skip to avoid recursion
-	currentBranch, err := runGit("rev-parse", "--abbrev-ref", "HEAD")
-	if err == nil && strings.HasPrefix(currentBranch, getBranchPrefix()+"/") {
-		// We're on a prompt branch, don't process
-		return
-	}
-	
-	commitInfo, err := analyzeCommit(commitSHA)
-	if err != nil {
-		fmt.Printf("Error analyzing commit: %v\n", err)
-		os.Exit(1)
-	}
-
-	if len(commitInfo.PromptFiles) == 0 {
-		return
-	}
-
-	if err := extractPrompts(commitInfo); err != nil {
-		fmt.Printf("Error extracting prompts: %v\n", err)
+	if err := processCommit(commitSHA); err != nil {
+		fmt.Printf("%v\n", err)
 		os.Exit(1)
 	}
 }
@@ -194,8 +201,8 @@ func extractPrompts(info *CommitInfo) error {
 	// For mixed commits, remove non-prompt files
 	if info.IsMixed {
 		for _, file := range info.OtherFiles {
-			runGit("restore", "--staged", file)
-			runGit("restore", file)
+			// Remove from index and working directory
+			runGit("rm", "-f", file)
 		}
 	}
 
@@ -220,8 +227,8 @@ func extractPrompts(info *CommitInfo) error {
 		fmt.Printf("✓ Pushed to origin/%s\n", promptBranch)
 	}
 
-	// Return to original branch
-	if _, err := runGit("checkout", info.SourceBranch); err != nil {
+	// Return to original branch (force to handle any uncommitted changes)
+	if _, err := runGit("checkout", "-f", info.SourceBranch); err != nil {
 		return fmt.Errorf("failed to return to original branch: %w", err)
 	}
 
