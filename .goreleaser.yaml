@@ -39,3 +39,14 @@ release:
     ---
 
     Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
+
+homebrew:
+  tap:
+    owner: Ilnicki010
+    name: homebrew-tap
+    token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+  
+  name: prrompt
+  description: "Lightweight git post-commit hook that extracts prompts from commits"
+  homepage: "https://github.com/Ilnicki010/prrompt"
+  license: "MIT"
