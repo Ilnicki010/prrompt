@@ -40,13 +40,25 @@ release:
 
     Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
 
-homebrew:
-  tap:
-    owner: Ilnicki010
-    name: homebrew-tap
-    token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-  
-  name: prrompt
-  description: "Lightweight git post-commit hook that extracts prompts from commits"
-  homepage: "https://github.com/Ilnicki010/prrompt"
-  license: "MIT"
+homebrew_casks:
+  - name: prrompt
+    repository:
+      owner: Ilnicki010
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    
+    homepage: "https://github.com/Ilnicki010/prrompt"
+    description: "Lightweight git post-commit hook that extracts prompts from commits"
+    license: "MIT"
+    
+    # Binary name to install
+    binaries:
+      - prrompt
+    
+    # Remove quarantine attribute for unsigned binaries (required for macOS)
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/prrompt"]
+          end
