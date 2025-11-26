@@ -18,7 +18,20 @@ What is saw is people deffering merging prompt changes into the main branch unti
 
 ## Installation
 
-### Using GoReleaser Releases
+### Using Homebrew
+
+```bash
+brew tap Ilnicki010/tap
+brew install prrompt
+```
+
+Then run `prrompt install` in your project directory to install the git hook:
+```bash
+cd your-project
+prrompt install
+```
+
+### Using direct executable download
 
 1. Download the release archive for your platform from the [releases page](https://github.com/Ilnicki010/prrompt/releases):
    - **macOS**: `prrompt_Darwin_x86_64.tar.gz` (Intel) or `prrompt_Darwin_arm64.tar.gz` (Apple Silicon)
