@@ -129,7 +129,13 @@ func main() {
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: %s <commit-sha>\n", toolName)
 		fmt.Println("This tool is meant to be run as a git post-commit hook")
+		fmt.Printf("Run '%s --help' for more information\n", toolName)
 		os.Exit(1)
+	}
+
+	if os.Args[1] == "--help" || os.Args[1] == "-h" {
+		showHelp()
+		os.Exit(0)
 	}
 
 	commitSHA := os.Args[1]
@@ -314,6 +320,48 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen] + "..."
+}
+
+func showHelp() {
+	fmt.Printf(`%s - Extract prompts from commits and create prompt-only branches
+
+USAGE:
+    %s <commit-sha>     Process a specific commit
+    %s install          Install the git post-commit hook
+    %s --help           Show this help message
+
+DESCRIPTION:
+    %s is a lightweight git post-commit hook that extracts prompts from commits
+    and creates a new branch containing only the prompt changes. This allows
+    prompt updates to be merged independently from other code changes.
+
+INSTALLATION:
+    Run '%s install' in your git repository to install the post-commit hook.
+
+CONFIGURATION:
+    Configure %s using git config:
+    
+    prrompt.commitPrefix      Commit message prefix (default: "%s")
+    prrompt.branchPrefix      Branch name prefix (default: "%s")
+    prrompt.baseBranch        Base branch for prompt branches (default: "%s")
+    prrompt.promptPatterns    Comma-separated patterns for prompt files (default: "%s")
+    prrompt.verbosity         Verbosity level: "low" or "high" (default: "%s")
+
+EXAMPLES:
+    # Install the hook
+    %s install
+    
+    # Configure custom prompt patterns
+    git config prrompt.promptPatterns "prompts/,.claude/skills/,docs/prompts/"
+    
+    # Set verbosity to high
+    git config prrompt.verbosity high
+    
+    # Process a specific commit manually
+    %s abc1234
+
+For more information, visit: https://github.com/Ilnicki010/prrompt
+`, toolName, toolName, toolName, toolName, toolName, toolName, toolName, defaultCommitPrefix, defaultBranchPrefix, defaultBaseBranch, strings.Join(defaultPromptPatterns, ","), defaultVerbosity, toolName, toolName)
 }
 
 func installHook() error {
