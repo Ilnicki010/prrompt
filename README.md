@@ -23,7 +23,6 @@ What is saw is people deffering merging prompt changes into the main branch unti
 1. Download the release archive for your platform from the [releases page](https://github.com/Ilnicki010/prrompt/releases):
    - **macOS**: `prrompt_Darwin_x86_64.tar.gz` (Intel) or `prrompt_Darwin_arm64.tar.gz` (Apple Silicon)
    - **Linux**: `prrompt_Linux_x86_64.tar.gz`, `prrompt_Linux_i386.tar.gz`, or `prrompt_Linux_arm64.tar.gz`
-   - **Windows**: `prrompt_Windows_x86_64.zip`, `prrompt_Windows_i386.zip`, or `prrompt_Windows_arm64.zip`
 
 2. Extract the archive and move the binary to a directory in your `PATH`:
    ```bash
