@@ -138,6 +138,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	if os.Args[1] == "--version" || os.Args[1] == "-v" {
+		fmt.Printf("%s version %s\n", toolName, getVersion())
+		os.Exit(0)
+	}
+
 	commitSHA := os.Args[1]
 	
 	if err := processCommit(commitSHA); err != nil {
@@ -320,6 +325,14 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen] + "..."
+}
+
+func getVersion() string {
+	tag, err := runGit("describe", "--tags", "--abbrev=0")
+	if err != nil {
+		return "unknown"
+	}
+	return tag
 }
 
 func showHelp() {
