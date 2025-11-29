@@ -206,7 +206,7 @@ func Test_NoPromptFiles(t *testing.T) {
 	}
 }
 
-func TestE2E_SkipOnPromptBranch(t *testing.T) {
+func Test_SkipOnPromptBranch(t *testing.T) {
 	repo := setupTestRepo(t)
 	defer os.RemoveAll(repo.Dir)
 
@@ -344,5 +344,33 @@ func Test_MultiplePromptPatterns(t *testing.T) {
 		if _, err := os.Stat(file); os.IsNotExist(err) {
 			t.Errorf("Prompt file %s should exist in the branch", file)
 		}
+	}
+}
+
+func Test_newPromptFileAdded(t *testing.T) {
+	repo := setupTestRepo(t)
+	defer os.RemoveAll(repo.Dir)
+
+	// Create a commit with a new prompt file
+	promptFile := filepath.Join(repo.Dir, ".claude/skills/test.md")
+	os.MkdirAll(filepath.Dir(promptFile), 0755)
+	os.WriteFile(promptFile, []byte("# Test prompt"), 0644)
+
+	runGitInDir(repo.Dir, "add", promptFile)
+	runGitInDir(repo.Dir, "commit", "-m", "Add prompt file")
+	
+	// Get the commit SHA
+	commitSHA, _ := runGitInDir(repo.Dir, "rev-parse", "HEAD")
+	shortSHA := commitSHA[:7]
+
+	if err := runPrrompt(t, repo.Dir, commitSHA); err != nil {
+		t.Fatalf("prrompt failed: %v", err)
+	}
+
+	// Verify branch was created
+	expectedBranch := defaultBranchPrefix + "/" + shortSHA
+	branches, _ := runGitInDir(repo.Dir, "branch", "--list", expectedBranch)
+	if !strings.Contains(branches, expectedBranch) {
+		t.Errorf("Expected branch %s not found. Branches: %s", expectedBranch, branches)
 	}
 }
